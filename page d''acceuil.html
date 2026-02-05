@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web HTOP – Fedora</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-4">
+
+<h1 class="mb-4">Web HTOP – Liste des processus</h1>
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control"
+               placeholder="Recherche par PID, nom ou utilisateur"
+               value="{{ query }}">
+        <button class="btn btn-primary">Rechercher</button>
+    </div>
+</form>
+
+<table class="table table-striped table-bordered">
+    <thead>
+	<tr>
+            <th>PID</th>
+            <th>Nom</th>
+            <th>Utilisateur</th>
+            <th>CPU (%)</th>
+            <th>Mémoire (%)</th>
+            <th>État</th>
+        </tr>
+    </thead>
+    <tbody id="process-table">
+</tbody>
+<tbody>
+       	{% for p in processes %}
+        <tr> <td>{{ p.pid }}</td>
+            <td>{{ p.name }}</td>
+            <td>{{ p.username }}</td>
+            <td>{{ p.cpu_percent }}</td>
+            <td>{{ "%.2f"|format(p.memory_percent) }}</td>
+            <td>{{ p.status }}</td>
+        </tr>
+	{% endfor %}
+    </tbody>
+</table>
+<script>
+async function loadProcesses() {
+    const response = await fetch("/api/processes");
+    const data = await response.json();
+
+    const table = document.getElementById("process-table");
+    table.innerHTML = "";
+
+    data.processes.forEach(p => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td><a href="/process/${p.pid}">${p.pid}</a></td>
+            <td>${p.name}</td>
+            <td>${p.username}</td>
+            <td>${p.cpu}</td>
+            <td>${p.memory}</td>
+            <td>${p.status}</td>
+        `;
+
+        table.appendChild(row);
+    });// Rafraîchissement toutes les 2 secondes
+setInterval(loadProcesses, 2000);
+loadProcesses();
+</script>
+
+</body>
+</html> 
